@@ -69,7 +69,7 @@ void TeleopTurtle::keyLoop() {
 
   puts("Reading from keyboard");
   puts("---------------------------");
-  puts("Use arrow keys to move the turtle.");
+  puts("Use arrow keys to move the robot.");
 
   for (;;) {
     // get the next event from the keyboard

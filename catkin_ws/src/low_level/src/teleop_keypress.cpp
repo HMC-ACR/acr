@@ -3,6 +3,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <termios.h>
+#include <algorithm>
 
 #define KEYCODE_R 0x43
 #define KEYCODE_L 0x44
@@ -103,8 +104,8 @@ void TeleopTurtle::keyLoop() {
 
     angular_current_ = angular_des_;
     // Ensuring the angular velocity we're publishing is within bounds.
-    angular_current_ = min(1.0, angular_current_);
-    angular_current_ = max(-1.0, angular_current_);
+    angular_current_ = std::min(1.0, angular_current_);
+    angular_current_ = std::max(-1.0, angular_current_);
 
     if (linear_des_ > linear_current_) {
       dirty = true;
@@ -116,8 +117,8 @@ void TeleopTurtle::keyLoop() {
       linear_current_ = linear_current_ - 0.25;
     }
     // Ensuring the linear velocity we're publishing is within bounds.
-    linear_current_ = min(1.0, linear_current_);
-    linear_current_ = max(-1.0, linear_current_);
+    linear_current_ = std::min(1.0, linear_current_);
+    linear_current_ = std::max(-1.0, linear_current_);
 
     if (dirty == true) {
       geometry_msgs::Twist twist;

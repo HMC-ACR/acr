@@ -1,4 +1,7 @@
 #include <SabertoothSimplified.h>
+
+#define LEFT_MOTOR_ID 1
+#define RIGHT_MOTOR_ID 2
 SabertoothSimplified ST; // We'll name the Sabertooth object ST.
                         // For how to configure the Sabertooth, see the DIP Switch Wizard for
                         //   http://www.dimensionengineering.com/datasheets/SabertoothDIPWizard/start.htm
@@ -14,23 +17,29 @@ SabertoothSimplified ST; // We'll name the Sabertooth object ST.
 void setup() {
   SabertoothTXPinSerial.begin(9600);
   Serial.begin(9600);
-  //delay(7000); //Plug TX pin into Arduino during this time
+  setMotorVal(LEFT_MOTOR_ID, 0);
+  setMotorVal(RIGHT_MOTOR_ID, 0);
 }
+
 void loop() {
-  //Serial.println("ready");
   // Read input from serial
   String strIn = readSerial();
   // Process input from serial and calls the corresponding function
   processSerial(strIn);
 }
-void setMotorVal(int motor_val) {
-  // motor_val -127 to 127
-  ST.motor(2, motor_val);
+
+// Mapping from rotational velocity to motor controller value
+// TODO(AQP): Emperically determine and implement mapping1
+// Currently cap the speed/value [-127, 127]
+int mapSpeedToMotorVal(double speed){
+  return (int) max(min(speed, 127), -127);
 }
-void setSteerVal(int steer_val) {
-   // steer_val -127 to 127
-   ST.motor(1, steer_val);
+
+void setMotorVal(int motor, int value) {
+  // motor_val -127 (full reverse) to 127 (full forward)
+  ST.motor(motor, value);
 }
+
 String readSerial() {
    String strIn = "";
    if (Serial.available() > 0) {
@@ -38,17 +47,15 @@ String readSerial() {
    }
    return strIn;
 }
+
 void processSerial(String strIn) {
   // Processes the command information and sets the relevant motor/steer values.
-  char controlType = strIn.charAt(0);
-  int controlVal = strIn.substring(2).toInt();
-  if (controlType == 'V' && controlVal>-128 && controlVal<128) {
-   setMotorVal(controlVal);
-   Serial.println("got drive");
-  } else if (controlType == 'W' && controlVal>-128 && controlVal<128) {
-   setSteerVal(controlVal);
-  } //else {
-   //setMotorVal(0);
-   //setSteerVal(0);
-  //}
+  char motorSide = strIn.charAt(0);
+  double motorSpeed = strIn.substring(2).toInt();
+  int value = mapSpeedToMotorVal(motorSpeed);
+  if (motorSide == 'L') {
+   setMotorVal(LEFT_MOTOR_ID, value);
+  } else if (motorSide == 'R') {
+   setMotorVal(RIGHT_MOTOR_ID, value);
+  }
 }

@@ -2,6 +2,7 @@
 // David Linn, 10/17/19, dlinn@hmc.edu
 
 #include <ros/ros.h>
+#include <geometry_msgs/Twist.h>
 #include "low_level/theta_dot_lr.h"
 
 #define WHEEL_RAD .1905 // meters
@@ -25,7 +26,7 @@ public:
     }
     
     DynamicModel() {
-        pub_ = n_.advertise<low_level::theta_dor_lr>("ll_control", 1);
+        pub_ = n_.advertise<low_level::theta_dot_lr>("ll_control", 1);
         sub_ = n_.subscribe("turtle1/cmd_vel", 1, &DynamicModel::callback, this);
     }
 

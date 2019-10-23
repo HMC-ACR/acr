@@ -31,7 +31,7 @@ public:
     }
 
     void callback(const geometry_msgs::Twist &input) {
-        low_level::theta_dot_lr ll_control_msg = model(input.v, input.w);
+        low_level::theta_dot_lr ll_control_msg = model(input.linear.x, input.angular.z);
         pub_.publish(ll_control_msg);
     }
 

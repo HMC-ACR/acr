@@ -5,8 +5,8 @@
 #include <geometry_msgs/Twist.h>
 #include "low_level/theta_dot_lr.h"
 
-#define WHEEL_RAD .1905 // meters
-#define AXLE_LEN .762 // meters
+#define WHEEL_RAD .1651 // 6.5 in = .1651 m
+#define AXLE_LEN .6096 // 2 ft = .6096 m
 
 class DynamicModel {
 public:

@@ -25,9 +25,11 @@ private:
   ros::Publisher twist_pub_;
 };
 
+// Max linear vel = 4 mph = 1.788 m/s
+// Max angular vel = 1 rotation in 3 secs = 2.094 radians/s
 TeleopTurtle::TeleopTurtle()
     : linear_des_(0), linear_current_(0), angular_des_(0), angular_current_(0),
-      l_scale_(120), a_scale_(120) {
+      l_scale_(1.788), a_scale_(2.094) {
           // We scale and publish in velocity / angle values in the range [-120,120]. 
   nh_.param("scale_angular", a_scale_, a_scale_);
   nh_.param("scale_linear_up", l_scale_, l_scale_);

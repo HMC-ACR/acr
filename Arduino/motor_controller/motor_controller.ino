@@ -1,3 +1,5 @@
+#include <ros.h>
+#include "low_level/theta_dot_lr.h"
 #include <SabertoothSimplified.h>
 
 #define LEFT_MOTOR_ID 1
@@ -14,48 +16,33 @@ SabertoothSimplified ST; // We'll name the Sabertooth object ST.
                         //   Arduino VIN    ->  Sabertooth 5V (OPTIONAL, if you want the Sabertooth to power the Arduino)
                         //
                         // If you want to use a pin other than TX->1, see the SoftwareSerial example.
+ros::NodeHandle nh;
+ros::Subscriber<low_level::theta_dot_lr> sub("ll_control", &callback);
+
+// Mapping from wheel rotational velocity (radians per second) to motor controller value
+// TODO(AQP): Emperically determine and implement mapping
+// Cap the speed/value [-127, 127]
+// Rough mapping -- w_max = V_max/r = 1.788 m/s / .1651 meters = 10.83 radians/s
+int mapSpeedToMotorVal(double speed){
+  speed = speed * 127 / 10.83;
+  return (int) max(min(speed, 127), -127);
+}
+
+void callback(low_level::theta_dot_lr& msg) {
+  ST.motor(LEFT_MOTOR_ID, mapSpeedToMotorVal(msg.theta_dot_left));
+  ST.motor(RIGHT_MOTOR_ID, mapSpeedToMotorVal(msg.theta_dot_right));
+}
+
 void setup() {
+  nh.initNode();
+  nh.subscribe(sub);
   SabertoothTXPinSerial.begin(9600);
-  Serial.begin(9600);
   setMotorVal(LEFT_MOTOR_ID, 0);
   setMotorVal(RIGHT_MOTOR_ID, 0);
 }
 
 void loop() {
-  // Read input from serial
-  String strIn = readSerial();
-  // Process input from serial and calls the corresponding function
-  processSerial(strIn);
+  nh.spinOnce();
+  delay(1);
 }
 
-// Mapping from rotational velocity to motor controller value
-// TODO(AQP): Emperically determine and implement mapping1
-// Currently cap the speed/value [-127, 127]
-int mapSpeedToMotorVal(double speed){
-  return (int) max(min(speed, 127), -127);
-}
-
-void setMotorVal(int motor, int value) {
-  // motor_val -127 (full reverse) to 127 (full forward)
-  ST.motor(motor, value);
-}
-
-String readSerial() {
-   String strIn = "";
-   if (Serial.available() > 0) {
-     strIn = Serial.readString();
-   }
-   return strIn;
-}
-
-void processSerial(String strIn) {
-  // Processes the command information and sets the relevant motor/steer values.
-  char motorSide = strIn.charAt(0);
-  double motorSpeed = strIn.substring(2).toInt();
-  int value = mapSpeedToMotorVal(motorSpeed);
-  if (motorSide == 'L') {
-   setMotorVal(LEFT_MOTOR_ID, value);
-  } else if (motorSide == 'R') {
-   setMotorVal(RIGHT_MOTOR_ID, value);
-  }
-}

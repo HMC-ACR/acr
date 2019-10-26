@@ -1,5 +1,5 @@
 #include <ros.h>
-#include "low_level/theta_dot_lr.h"
+#include <low_level/theta_dot_lr.h>
 #include <SabertoothSimplified.h>
 
 #define LEFT_MOTOR_ID 1
@@ -17,7 +17,6 @@ SabertoothSimplified ST; // We'll name the Sabertooth object ST.
                         //
                         // If you want to use a pin other than TX->1, see the SoftwareSerial example.
 ros::NodeHandle nh;
-ros::Subscriber<low_level::theta_dot_lr> sub("ll_control", &callback);
 
 // Mapping from wheel rotational velocity (radians per second) to motor controller value
 // TODO(AQP): Emperically determine and implement mapping
@@ -29,20 +28,26 @@ int mapSpeedToMotorVal(double speed){
 }
 
 void callback(low_level::theta_dot_lr& msg) {
+  //char buf[16];
+  //nh.loginfo("Setting right = ");
+  //nh.loginfo(itoa(mapSpeedToMotorVal(msg.theta_dot_right), buf, 10));
+  if (msg.theta_dot_left == 0 && msg.theta_dot_right == 0) {
+    ST.stop();
+  }
   ST.motor(LEFT_MOTOR_ID, mapSpeedToMotorVal(msg.theta_dot_left));
   ST.motor(RIGHT_MOTOR_ID, mapSpeedToMotorVal(msg.theta_dot_right));
 }
+
+ros::Subscriber<low_level::theta_dot_lr> sub("ll_control", &callback);
 
 void setup() {
   nh.initNode();
   nh.subscribe(sub);
   SabertoothTXPinSerial.begin(9600);
-  setMotorVal(LEFT_MOTOR_ID, 0);
-  setMotorVal(RIGHT_MOTOR_ID, 0);
+  ST.stop();
 }
 
 void loop() {
   nh.spinOnce();
   delay(1);
 }
-

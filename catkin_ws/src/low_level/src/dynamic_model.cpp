@@ -27,7 +27,7 @@ public:
     
     DynamicModel() {
         pub_ = n_.advertise<low_level::theta_dot_lr>("ll_control", 1);
-        sub_ = n_.subscribe("turtle1/cmd_vel", 1, &DynamicModel::callback, this);
+        sub_ = n_.subscribe("cmd_vel", 1, &DynamicModel::callback, this);
     }
 
     void callback(const geometry_msgs::Twist &input) {

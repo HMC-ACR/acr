@@ -1,10 +1,11 @@
-// Dynamic model node for Autonomous Campus Robot
+// Motor controller node for Autonomous Campus Robot
 // David Linn, 10/17/19, dlinn@hmc.edu
 
 #include <ros/ros.h>
 #include "low_level/theta_dot_lr.h"
 #include <algorithm>
 // C library headers
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 // Linux headers
@@ -18,27 +19,27 @@
 
 class MotorController {
 public:
-    void motor(int which, int val) {
+    void motor(int which, int power) {
         unsigned char command, magnitude;
-        power = std::clamp(power, -127, 127);
+        power = std::max(std::min(power, 127), -127);
         magnitude = abs(power) >> 1;
         
-        if (motor == 1)
+        if (which == 1)
         {
             command = power < 0 ? 63 - magnitude : 64 + magnitude;
         }
-        else if (motor == 2)
+        else if (which == 2)
         {
             command = power < 0 ? 191 - magnitude : 192 + magnitude;
         }
         
-        command = std::clamp(command, 1, 254);
-        write(serial_port, command, 8);
+        command = std::max(std::min((int)command, 254), 1);
+        write(serial_port, &command, 1);
     }
     
     int mapSpeedToMotorVal(double speed){
-        speed = speed * 127 / 10.83;
-        return (int) max(min(speed, 127), -127);
+        int val = speed * 127 / 10.83;
+        return (int) std::max(std::min(val, 127), -127);
     }
     
     MotorController() {
@@ -46,13 +47,13 @@ public:
         configSerial();
     }
 
-    void callback(low_level::theta_dot_lr& msg) {
+    void callback(const low_level::theta_dot_lr& msg) {
         motor(LEFT_MOTOR_ID, mapSpeedToMotorVal(msg.theta_dot_left));
         motor(RIGHT_MOTOR_ID, mapSpeedToMotorVal(msg.theta_dot_right));
     }
 
     void configSerial() {
-        serial_port = open("/dev/ttyUSB0", O_RDWR);
+        serial_port = open("/dev/ttyTHS2", O_RDWR);
         if (serial_port < 0) {
             printf("Error %i from open: %s\n", errno, strerror(errno));
         }
@@ -106,6 +107,7 @@ int main(int argc, char **argv) {
     //while(true) {
     //  ros::Rate(YOUR_DESIRED_RATE).sleep(); ros::spinOnce();
     //}
+
 
     return 0;
 }

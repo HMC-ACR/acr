@@ -1,0 +1,7 @@
+axis_linear: 4
+scale_linear: 1.788 # 4mph=1.788 m/s
+
+axis_angular: 3
+scale_angular: 2.094 # 1 rotation in 3 sec = 2pi/3 = 2.094 radians/s
+
+enable_button: 4 # left button (LB) must be held down to enable cmd_vel publishing

@@ -13,9 +13,17 @@
 #include <errno.h> // Error integer and strerror() function
 #include <termios.h> // Contains POSIX terminal control definitions
 #include <unistd.h> // write(), read(), close()
+#include <signal.h>
 
 #define LEFT_MOTOR_ID 1
 #define RIGHT_MOTOR_ID 2
+int serial_port;
+
+void mySigintHandler(int num) {
+    unsigned char stopCommand = 0x0;
+    write(serial_port, &stopCommand, 1);
+    ros::shutdown();
+}
 
 class MotorController {
 public:
@@ -93,15 +101,14 @@ public:
 private:
     ros::NodeHandle n_;
     ros::Subscriber sub_;
-    int serial_port;
 };
 
 int main(int argc, char **argv) {
     //Initiate ROS
-    ros::init(argc, argv, "MotorController");
+    ros::init(argc, argv, "MotorController", ros::init_options::NoSigintHandler);
 
     MotorController node;
-
+    signal(SIGINT, mySigintHandler);
     ros::spin();
     // Replace above line with below if we need faster updating
     //while(true) {

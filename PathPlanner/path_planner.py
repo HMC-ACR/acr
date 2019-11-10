@@ -68,7 +68,7 @@ class PathPlanner:
         self.start_i, self.start_j, self.start_index = self.pos_to_grid(
             self.start.position.x, self.start.position.y)
         
-        self.path_plan()
+        self.plan_path()
 
     def odom_callback(self, Odom):
         self.odom = Odom
@@ -91,7 +91,14 @@ class PathPlanner:
 
         return grid_i, grid_j, grid_index
 
-    def path_plan(self):
+    def plan_path(self):
+        """ Updates the path plan based on goal / current positions.
+            Uses RRT.
+        """
+        #create goal node
+		self.goal_node.x = self.goal_x
+		self.goal_node.y = self.goal_y
+		self.goal_node.index = 1
     # 3. Randomly Select New Node c to expand
     # 4. Randomly Generate new Node c’ from c
     # 5. If edge e from c to c’ is collision-free

@@ -2,7 +2,9 @@ import time
 import board
 import busio
 import adafruit_bno055
- 
+
+# i2c device must be on Jetson's i2c bus 1 
+
 i2c = busio.I2C(board.SCL, board.SDA)
 sensor = adafruit_bno055.BNO055(i2c)
  

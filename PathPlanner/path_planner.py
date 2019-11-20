@@ -11,12 +11,14 @@ class PathPlanner:
 
     def __init__(self):
 
+		rospy.init_node('PathPlanner', anonymous=True)
+        
         # initialize goal, odometry and map
         self.goal = Pose()
         self.odom = Odometry()
         self.map = OccupancyGrid()
 
-        # 
+        # Map details
         self.width = 0
         self.height = 0
         self.resolution = 0
@@ -25,6 +27,8 @@ class PathPlanner:
         self.start_pose = Pose()
         self.prm_plan = Path()
         self.roadmap = []
+        # An array of all nodes in our tree.
+        self.nodes = []
 
         # ROS
         rospy.init_node('pathPlanning', anonymous=True)
@@ -95,16 +99,38 @@ class PathPlanner:
         """ Updates the path plan based on goal / current positions.
             Uses RRT.
         """
-        #create goal node
+        # Create goal node.
 		self.goal_node.x = self.goal_x
 		self.goal_node.y = self.goal_y
 		self.goal_node.index = 1
-    # 3. Randomly Select New Node c to expand
-    # 4. Randomly Generate new Node c’ from c
-    # 5. If edge e from c to c’ is collision-free
-    # 6.    Add(c’, e) to R
-    # 7. If c’ belongs to endgame region, return path
-    # 8. Return if stopping criteria is met
+
+        # Make sure start node is free.
+		for i in range(1, 10):
+			grid_i1, grid_j1, grid_id1 = self.pos_to_grid(self.start_x, self.start_y)
+
+			if self.map.data[grid_id1] == 0:
+				break
+
+			# Otherwise randomly displace start_pose.
+			self.start_x += -0.01
+			self.start_y += -0.01
+
+        # Create start node.
+		self.start_node.x = self.start_x
+		self.start_node.y = self.start_y
+		self.start_node.index = 0
+
+        # List to keep track of nodes.
+		self.nodes = [self.start_node]
+
+        # Clear path.
+		self.prm_plan.poses = []
+		last_node = self.start_node
+		numiter = 0
+
+        # Stop loop if no collision between node and goal;
+		# by checking each new node for a path to goal here, we take a greedy approach
+		# so we stop as soon as we find any path.
 
         while not self.no_collision(last_node.x, last_node.y, self.goal):
             numiter += 1
@@ -134,7 +160,7 @@ class PathPlanner:
 			new_node_y = min( 2.99, new_node_y)
 
             if self.collisionDetect(minDistance_node.x, minDistance_node.y, new_node_x, new_node_y):
-    				#Add to tree and to array
+    			# Add to tree and to array.
 				new_node = PRM_Node(new_node_x, new_node_y, minDistance_node)
 				minDistance_node.addChild(new_node)
 				self.nodes.append(new_node)
@@ -143,7 +169,7 @@ class PathPlanner:
         path = self.path_backtrack(last_node)
 		path.append(self.goal_node)        
 
-        #Path smoothing
+        # Path smoothing
  		for n in range(1,40*len(path)):
 			index1 = random.randint(0,len(path)-1)
 			index2 = random.randint(0,len(path)-1)
@@ -155,7 +181,6 @@ class PathPlanner:
 					path = path[:index1+1]+path[index2:]
 				elif index1 > index2:
 					path = path[:index2+1]+path[index1:] 
-		#Otherwise, indexes equal, do nothing
 					
 		#Convert nodes to poses
 		for node in path :
@@ -166,8 +191,17 @@ class PathPlanner:
 			self.prm_plan.poses.append(node_pose)
 
     def distance(self, x1, y1, x2, y2):
-    		dist = np.sqrt((x2-x1)**2 + (y2-y1)**2)
+    	dist = np.sqrt((x2-x1)**2 + (y2-y1)**2)
 		return dist
+
+	def path_backtrack(self, new_node):
+        """ We want the list of nodes; first element is start node, last node is new node.
+        """
+		if (new_node.parent is not None):
+			return self.path_backtrack(new_node.parent) + [new_node] 
+		else:
+			#no parent
+			return [new_node]
 
     def generate_node(self):
         """ Generate a random new node to expand.

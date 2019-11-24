@@ -1,4 +1,5 @@
 import serial
+import math
 import time
 import pynmea2
 import board
@@ -8,6 +9,15 @@ import rospy
 import rospkg
 from geometry_msgs.msg import TwistWithCovariance, PoseWithCovariance
 from nag_msgs.msgs import Odometry
+
+EARTH_RADIUS_M = 6.371E6
+RADS_PER_DEG = math.pi/180.0
+# Origin located in middel of Sprague Courtyard
+ORIGIN_LAT_DEG = 34.106103
+ORIGIN_LON_DEG = -117.711969
+ORIGIN_LAT_RAD = ORIGIN_LAT_DEG*RADS_PER_DEG
+ORIGIN_LON_RAD = ORIGIN_LON_DEG*RADS_PER_DEG
+COS_ORIGIN_LAT = math.cos(ORIGIN_LAT_RAD)
 
 class GPSIMU():
 
@@ -42,8 +52,10 @@ class GPSIMU():
         if (msg[0:6] == '$GNGGA'):
             parsed_msg = pynmea2.parse(msg)
             # Latitude in x, Longitude in y
-            self.odom.pose.pose.position.x = parsed_msg.lat
-            self.odom.pose.pose.position.y = parsed_msg.lon
+            self.odom.pose.pose.position.x = EARTH_RADIUS_M*(parsed_msg.lon*RADS_PER_DEG -
+                    ORIGIN_LON_RAD)*COS_ORIGIN_LAT
+            self.odom.pose.pose.position.y = EARTH_RADIUS_M*(pasred_msg.lat*RADS_PER_DEG -
+                    ORIGIN_LAT_RAD)
             # print('Latitude: {}'.format(parsed_msg.lat))
             # print('Longitude: {}'.format(parsed_msg.lon))
 

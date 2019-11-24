@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import serial
 import math
 import time
@@ -23,15 +25,14 @@ class GPSIMU():
 
     def __init__(self):
 
-        self.odom = Odometry()
-
         # ROS
-        rospy.init_node('Localization', anonymous=True)
-        self.path_pub = rospy.Publisher('/odom', Odometry, queue_size=10)
+        self.odom = Odometry()
+        self.odom_pub = rospy.Publisher('/odom', Odometry, queue_size=10)
         self.rate = rospy.Rate(10)  # 10 Hz
+        rospy.init_node('Localization', anonymous=True)
 
         while not rospy.is_shutdown():
-            self.path_pub()
+            self.odom_pub(self.odom)
             self.rate.sleep()
 
     def init_imu():
@@ -56,8 +57,6 @@ class GPSIMU():
                     ORIGIN_LON_RAD)*COS_ORIGIN_LAT
             self.odom.pose.pose.position.y = EARTH_RADIUS_M*(pasred_msg.lat*RADS_PER_DEG -
                     ORIGIN_LAT_RAD)
-            # print('Latitude: {}'.format(parsed_msg.lat))
-            # print('Longitude: {}'.format(parsed_msg.lon))
 
         # Read IMU
         # linear acc

@@ -15,3 +15,10 @@ apt install ros-melodic-joy
 apt install ros-melodic-teleop-twist-joy
 roslaunch low_level teleop.launch  # may need to change launchfile if joystick does not enumerate as /dev/input/js0
 ```
+## Running Odometry Publisher:
+```
+roscore # makes sure that a roscore is up and running
+cd ~/acr/catkin_ws
+catkin_make
+rosrun low_level gps_imu.py
+```

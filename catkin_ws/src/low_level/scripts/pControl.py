@@ -19,9 +19,9 @@ class PointTracker:
         self.alpha = 0.0
         self.beta = 0.0
         self.rho = 0.0
-        self.k_alpha = 1.0/4.0 #6.0/8.0  #untuned, just working from strong stability conditions
+        self.k_alpha = 4.0 #6.0/8.0  #untuned, just working from strong stability conditions
         self.k_beta = -2.0/8.0    
-        self.k_rho = 1.0/4.1
+        self.k_rho = 2.0/4.1
         #print("Kalpha is" self.k_alpha)
 
         rospy.init_node('pointTracking', anonymous=True)

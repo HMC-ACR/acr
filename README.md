@@ -28,4 +28,4 @@ rosrun low_level gps_imu.py
 ```
 
 ## SSH into Jetson from Remote Computer
-Run `ifconfig` while connected to display and Claremont-ETC. Hope IP address stays the same once we take vehicle outside. Then `ssh muddacr@<IPAddr>` from remote computer.
+Run `ifconfig` while connected to display and Claremont-ETC. Hope IP address stays the same once we take vehicle outside. Then connect to Claremont-ETC (password cityoftrees87) and `ssh muddacr@<IPAddr>` from remote computer.

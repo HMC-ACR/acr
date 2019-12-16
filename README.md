@@ -20,5 +20,6 @@ roslaunch low_level teleop.launch  # may need to change launchfile if joystick d
 roscore # makes sure that a roscore is up and running
 cd ~/acr/catkin_ws
 catkin_make
+sudo -s # run as root
 rosrun low_level gps_imu.py
 ```

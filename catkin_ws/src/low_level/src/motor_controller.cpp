@@ -46,7 +46,7 @@ public:
     }
     
     int mapSpeedToMotorVal(double speed){
-        int val = speed * 127 / 10.83;
+        int val = speed; // * 127 / 10.83;
         return (int) std::max(std::min(val, 127), -127);
     }
     

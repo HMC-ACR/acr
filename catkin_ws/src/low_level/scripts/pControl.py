@@ -26,8 +26,8 @@ class PointTracker:
 
         rospy.init_node('pointTracking', anonymous=True)
         self.pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
-        self.odom_sub = rospy.Subscriber('/decawave/odom', Odometry, self.odom_callback)
-        self.target_sub = rospy.Subscriber('/astar_planner/current_target', PoseStamped, self.target_callback)
+        self.odom_sub = rospy.Subscriber('/odom', Odometry, self.odom_callback)
+        self.target_sub = rospy.Subscriber('/current_target', PoseStamped, self.target_callback)
         #self.path_sub = rospy.Subscriber('/astar_planner/global_path', Path, self.path_callback)
         self.rate = rospy.Rate(10)    #10 Hz
 
@@ -38,13 +38,7 @@ class PointTracker:
         
     def target_callback(self, target):
         self.current_target = target.pose
-        rospy.loginfo('Updating current target' )
-        #print("hi")
-
-    def path_callback(self, path):
-        #estimate for error in rho
-        self.path_distance = len(path.poses)*0.5 #grid cells are 0.5 m
-        
+        rospy.loginfo('Updating current target' )   
     
     def odom_callback(self, odom):
         if (self.current_target.position.x == 0 and self.current_target.position.y == 0):
@@ -72,19 +66,13 @@ class PointTracker:
             w = 0
         
         # Create message and publish
-        twist_lin = Twist()
-        twist_ang = Twist()        #message object is a Twist
+        twist_msg = Twist()
         if (abs(self.alpha) > 0.52): #if angle is bigger tha 30 degrees, then we need to turn 
-            twist_ang.angular.z = w
-            self.pub.publish(twist_ang)
-        elif (w ==0):
-            twist_lin.linear.x = v
-            self.pub.publish(twist_lin)
+            twist_msg.angular.z = w
         else: #both components
-            twist_ang.angular.z = w
-            twist_lin.linear.x = v
-            self.pub.publish(twist_lin)
-            self.pub.publish(twist_ang)
+            twist_msg.angular.z = w
+            twist_msg.linear.x = v
+        self.pub.publish(twist_msg)
 
         
         

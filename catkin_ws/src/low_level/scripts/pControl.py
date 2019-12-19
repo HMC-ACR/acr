@@ -19,9 +19,9 @@ class PointTracker:
         self.alpha = 0.0
         self.beta = 0.0
         self.rho = 0.0
-        self.k_alpha = 4.0 #6.0/8.0  #untuned, just working from strong stability conditions
+        self.k_alpha = 1#4.0 #6.0/8.0  #untuned, just working from strong stability conditions
         self.k_beta = -2.0/8.0    
-        self.k_rho = 2.0/4.1
+        self.k_rho = 0.25#2.0/4.1
         #print("Kalpha is" self.k_alpha)
 
         rospy.init_node('pointTracking', anonymous=True)
@@ -51,10 +51,19 @@ class PointTracker:
             poseQuat = odom.pose.pose.orientation
             poseQuat_arr = np.array([poseQuat.x, poseQuat.y, poseQuat.z, poseQuat.w])
             eulerAngles = euler_from_quaternion(poseQuat_arr, 'sxyz')
-            theta = eulerAngles[2] #We want yaw
+            thetaBefore = eulerAngles[0] #We want yaw
+            # convert from west=0 to east=0
+            if(thetaBefore >= 0):
+                theta = -(thetaBefore - pi)
+            else:
+                theta = -(thetaBefore + pi)
             self.alpha = -theta + atan2(delta_y, delta_x)
+            if (self.alpha >= pi):
+                self.alpha -= pi
+            elif (self.alpha <= -pi):
+                self.alpha += pi
             self.beta = -theta - self.alpha
-            print("alpha:"+str(self.alpha) + "beta" + str(self.beta) + "rho:" + str(self.rho)+ "theta" + str(theta))
+            print("\nalpha:"+str(self.alpha) + "\nbeta" + str(self.beta) + "\nrho:" + str(self.rho)+ "\ntheta" + str(theta))
 
     def cmd_vel_pub(self):
         # Compute desired velocities based on control laws
@@ -67,7 +76,8 @@ class PointTracker:
         
         # Create message and publish
         twist_msg = Twist()
-        if (abs(self.alpha) > 0.52): #if angle is bigger tha 30 degrees, then we need to turn 
+        
+        if (abs(self.alpha) > pi/3): #if angle is bigger tha 30 degrees, then we need to turn 
             twist_msg.angular.z = w
         else: #both components
             twist_msg.angular.z = w

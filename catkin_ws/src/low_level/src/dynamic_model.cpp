@@ -7,7 +7,6 @@
 
 #define WHEEL_RAD .1651 // 6.5 in = .1651 m
 #define AXLE_LEN .6096 // 2 ft = .6096 m
-#define MAX_THRESHOLD 4 // Allow the wheels to rotate at most 4 rad/s
 
 class DynamicModel {
 public:
@@ -23,15 +22,6 @@ public:
         float ang_component = (AXLE_LEN*w)/2;
         output.theta_dot_left = (v - ang_component)/WHEEL_RAD;
         output.theta_dot_right = (v + ang_component)/WHEEL_RAD;
-        float max_value =
-            max(abs(output.theta_dot_left), abs(output.theta_dot_right));
-        if max_value > MAX_THRESHOLD {
-            // Scale the wheel rotation down if it's above a certain threshold.
-            output.theta_dot_left =
-                output.theta_dot_left * (MAX_THRESHOLD/max_value);
-            output.theta_dot_right = output.theta_dot_right *
-                                     (MAX_THRESHOLD / max_value);
-        }
         return output;
     }
     

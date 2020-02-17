@@ -7,7 +7,7 @@ MAP_XMAX = 100 # meters
 MAP_YMAX = 100 # meters
 MAP_ZMAX = 10
 RESOLUTION_CM = 10
-THRESHOLD = 1000
+THRESHOLD = 10
 
 def plot_grid(grid, obsGrid):
     # display grid
@@ -89,7 +89,7 @@ def convert_to_global(local_measurements, pose, quaternion=False):
 
 def load_data(filename):
     # open/read data in file
-    with open(filename, mode = 'r') as raw_scan:
+    with open('scans/'+filename, mode = 'r') as raw_scan:
 
         file_reader = csv.reader(raw_scan, delimiter=',')
 
@@ -106,10 +106,13 @@ def load_data(filename):
 
 
 def main():
-    files = [ 'stationary_scan_vlsi_lab.csv' ]  # list of log names for the map
-    # graph shifted (50, 50, 0) and rotated by a yaw angle
-    poses = [[50, 50, 0, 0, 0, np.arctan2(25,50)]]  # list of poses (x, y, z, roll, pitch, yaw) of each log in global frame
-
+    # list of log names for the map
+    files = [ '2020_2_17__11_44_18.csv', '2020_2_17__11_50_3.csv', '2020_2_17__11_56_15.csv', '2020_2_17__12_1_10.csv', '2020_2_17__12_6_15.csv', '2020_2_17__12_10_16.csv', '2020_2_17__12_13_55.csv', '2020_2_17__12_18_20.csv', '2020_2_17__12_23_41.csv' ]
+    # list of poses (x, y, z, roll, pitch, yaw) of each log in global frame
+    poses = [[-0.2032, -0.127, 1.2319, 0, 0, 0], [-3.8105, 9.9314, 1.2319, 0, 0, 0], [-11.4935, -1.7653, 1.2319, 0, 0, 0], [14.097, -1.77165, 1.2319, 0, 0, 0], [-3.8735, 13.2715, 1.2319, 0, 0, 0], [-11.176, -13.5255, 1.2319, 0, 0, 0], [10.7696, -13.5255, 1.2319, 0, 0, 0], [-11.176, 9.9314, 1.2319, 0, 0, 0], [10.7696, 9.9314, 1.2319, 0, 0, 0]]
+    for pose in poses:
+        pose[0] += 50
+        pose[1] += 50
     # Preprocessing steps to convert measurments to global frame
     for idx, f in enumerate(files):
         local_measurements = load_data(f)

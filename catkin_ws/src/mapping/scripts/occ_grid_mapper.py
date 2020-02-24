@@ -3,11 +3,12 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import csv
 
-MAP_XMAX = 100 # meters
-MAP_YMAX = 100 # meters
+MAP_XMAX = (92*12+4)/39.37 # meters
+MAP_YMAX = (98*12+3)/39.37 # meters
 MAP_ZMAX = 10
+MAP_ZMIN = 0.1
 RESOLUTION_CM = 10
-THRESHOLD = 10
+THRESHOLD = 1000
 
 def plot_grid(grid, obsGrid):
     # display grid
@@ -78,12 +79,15 @@ def convert_to_global(local_measurements, pose, quaternion=False):
         R[1,:] = [ sa*cb, sa*sb*sg + ca*cg, sa*sb*cg - ca*sg ]
         R[2,:] = [ -sb,   cb*sg,            cb*cg ]
 
+        '''
         # reverse rotation
         Rinv = np.linalg.inv(R)
 
         # shifted points
         local_T = np.transpose(local_measurements)
         shifted_points = np.transpose( Rinv @ local_T[:3,:] )
+        '''
+        shifted_points = np.array(local_measurements)[:,:3] @ R
         global_points = np.repeat([pose[:3]],sz[0],axis=0) + shifted_points
     return global_points
 
@@ -107,12 +111,12 @@ def load_data(filename):
 
 def main():
     # list of log names for the map
-    files = [ '2020_2_17__11_44_18.csv', '2020_2_17__11_50_3.csv', '2020_2_17__11_56_15.csv', '2020_2_17__12_1_10.csv', '2020_2_17__12_6_15.csv', '2020_2_17__12_10_16.csv', '2020_2_17__12_13_55.csv', '2020_2_17__12_18_20.csv', '2020_2_17__12_23_41.csv' ]
+    files = [ '2020_2_17__11_44_18.csv', '2020_2_17__11_50_3.csv', '2020_2_17__11_56_15.csv' ]#, '2020_2_17__12_1_10.csv', '2020_2_17__12_6_15.csv', '2020_2_17__12_10_16.csv', '2020_2_17__12_13_55.csv', '2020_2_17__12_18_20.csv', '2020_2_17__12_23_41.csv' ]
     # list of poses (x, y, z, roll, pitch, yaw) of each log in global frame
-    poses = [[-0.2032, -0.127, 1.2319, 0, 0, 0], [-3.8105, 9.9314, 1.2319, 0, 0, 0], [-11.4935, -1.7653, 1.2319, 0, 0, 0], [14.097, -1.77165, 1.2319, 0, 0, 0], [-3.8735, 13.2715, 1.2319, 0, 0, 0], [-11.176, -13.5255, 1.2319, 0, 0, 0], [10.7696, -13.5255, 1.2319, 0, 0, 0], [-11.176, 9.9314, 1.2319, 0, 0, 0], [10.7696, 9.9314, 1.2319, 0, 0, 0]]
+    poses = [[-0.2032, -0.127, 1.2319, 0, 0, 0], [-6.348-3.8105, -13.775+9.9314, 1.2319, 0, 0, 0], [11.426-11.4935, -9.926-1.7653, 1.2319, 0, 0, 0] ]#, [14.097, -1.77165, 1.2319, 0, 0, 0], [-3.8735, 13.2715, 1.2319, 0, 0, 0], [-11.176, -13.5255, 1.2319, 0, 0, 0], [10.7696, -13.5255, 1.2319, 0, 0, 0], [-11.176, 9.9314, 1.2319, 0, 0, 0], [10.7696, 9.9314, 1.2319, 0, 0, 0]]
     for pose in poses:
-        pose[0] += 50
-        pose[1] += 50
+        pose[0] += (432+114)/39.37
+        pose[1] += (527.5+134.25)/39.37
     # Preprocessing steps to convert measurments to global frame
     for idx, f in enumerate(files):
         local_measurements = load_data(f)
@@ -121,19 +125,19 @@ def main():
         if (idx==0):
             global_measurements = gm
         else:
-            np.append(global_measurements, gm, axis=0)
+            global_measurements = np.append(global_measurements, gm, axis=0)
 
-    occ_grid_count = np.zeros((100*MAP_XMAX//RESOLUTION_CM, 100*MAP_YMAX//RESOLUTION_CM))
+    occ_grid_count = np.zeros((int(100*MAP_XMAX//RESOLUTION_CM), int(100*MAP_YMAX//RESOLUTION_CM)))
     print('Starting point count on grid...')
     for point in tqdm(global_measurements):
         x = point[0]
         y = point[1]
         z = point[2]
 
-        if x >= 0 and x <= MAP_XMAX and y >= 0 and y <= MAP_YMAX and z <= MAP_ZMAX:
+        if x >= 0 and x <= MAP_XMAX and y >= 0 and y <= MAP_YMAX and z <= MAP_ZMAX and z >= MAP_ZMIN:
 
-            x_idx = int(100*x//RESOLUTION_CM)
-            y_idx = int(100*y//RESOLUTION_CM)
+            x_idx = int(min(100*x//RESOLUTION_CM, 100*MAP_XMAX//RESOLUTION_CM - 1))
+            y_idx = int(min(100*y//RESOLUTION_CM, 100*MAP_YMAX//RESOLUTION_CM - 1))
 
             occ_grid_count[x_idx, y_idx] += 1
     obsGrid = occ_grid_count >= THRESHOLD

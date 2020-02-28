@@ -5,8 +5,6 @@ import csv
 
 MAP_XMAX = (92*12+4)/39.37 # meters
 MAP_YMAX = (98*12+3)/39.37 # meters
-#MAP_XMAX = 100
-#MAP_YMAX = 100
 MAP_ZMAX = 10
 MAP_ZMIN = 0.1
 RESOLUTION_CM = 10
@@ -91,7 +89,8 @@ def convert_to_global(local_measurements, pose, quaternion=False):
         shifted_points = np.transpose( Rinv @ local_T[:3,:] )
         '''
         shifted_points = np.array(local_measurements)[:,:3] @ R
-        global_points = shifted_points + np.repeat([pose[:3]],sz[0],axis=0)
+
+        global_points = np.repeat([pose[:3]],sz[0],axis=0) + shifted_points
     return global_points
 
 def load_data(filename):

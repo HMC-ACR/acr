@@ -18,6 +18,7 @@ roslaunch low_level teleop.launch  # may need to change launchfile if joystick d
 (X=0,Y=0) corresponds to (Lat=,Long=)
 Yaw=0 degrees corresponds to east.
 X is directly true east, Y is directly true north. Yaw is CCW about Z-axis.
+"Adafruit-Blinka" Python module must be installed before running.
 ```
 roscore # makes sure that a roscore is up and running
 cd ~/acr/catkin_ws

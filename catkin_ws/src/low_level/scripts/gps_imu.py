@@ -14,7 +14,7 @@ from nav_msgs.msg import Odometry
 
 EARTH_RADIUS_M = 6.371E6
 RADS_PER_DEG = math.pi/180.0
-# Origin located in middel of Sprague Courtyard
+# Origin located in middle of Sprague Courtyard
 ORIGIN_LAT_DEG = 34.106103
 ORIGIN_LON_DEG = -117.711969
 ORIGIN_LAT_RAD = ORIGIN_LAT_DEG*RADS_PER_DEG
@@ -50,14 +50,8 @@ class GPSIMU():
         msg = self.ser.readline().decode().strip('\r\n')
         if (msg[0:6] == '$GNGGA'):
             parsed_msg = pynmea2.parse(msg)
-            print(type(parsed_msg.latitude))
-            print(parsed_msg.latitude)
 
             # Latitude in x, Longitude in y
-            #if parsed_msg.longitude == "" or parsed_msg.latitude == "":
-            #    self.odom.pose.pose.position.x = 0
-            #    self.odom.pose.pose.position.y = 0
-            #else:
             self.odom.pose.pose.position.x = EARTH_RADIUS_M*(parsed_msg.longitude*RADS_PER_DEG -
                     ORIGIN_LON_RAD)*COS_ORIGIN_LAT
             self.odom.pose.pose.position.y = EARTH_RADIUS_M*(parsed_msg.latitude*RADS_PER_DEG -
@@ -65,10 +59,12 @@ class GPSIMU():
 
         # Read IMU
         # linear acc
-        # note that we are putting acc. values in the velocity msg
+        # NOTE: that we are putting acc. values in the velocity msg
+        # TODO: probably fix this in the future or maybe integrate to get velocity
         self.odom.twist.twist.linear.x = self.sensor.linear_acceleration[0]
         self.odom.twist.twist.linear.y = self.sensor.linear_acceleration[1]
         self.odom.twist.twist.linear.z = self.sensor.linear_acceleration[2]
+
         # quaternion
         self.odom.pose.pose.orientation.x = self.sensor.quaternion[0]
         self.odom.pose.pose.orientation.y = self.sensor.quaternion[1]

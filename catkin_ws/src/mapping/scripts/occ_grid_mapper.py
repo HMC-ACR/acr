@@ -6,9 +6,9 @@ import csv
 MAP_XMAX = (92*12+4)/39.37 # meters
 MAP_YMAX = (98*12+3)/39.37 # meters
 MAP_ZMAX = 10
-MAP_ZMIN = 0.1
+MAP_ZMIN = 0.3
 RESOLUTION_CM = 10
-THRESHOLD = 1000
+THRESHOLD = 100
 
 def plot_grid(grid, obsGrid):
     # display grid
@@ -110,12 +110,27 @@ def load_data(filename):
 
     return data
 
+def save_grid(filename, grid, asGrid = False):
+    # save occupancy grid to a csv file    
+    xMax, yMax = np.shape(grid)
+    with open(filename, mode = 'w') as grid_file:
+        if asGrid:
+            grid_writer = csv.writer(grid_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            grid_writer.writerow([' '] + [i for i in range(yMax)])
+            for i in range(xMax):
+                grid_writer.writerow([i] + list(grid[i,:]))
+        else:
+            grid_writer = csv.writer(grid_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            grid_writer.writerow(['x (cm)', 'y (cm)', 'occupied'])
+            for i in range(xMax):
+                for j in range(yMax):
+                    grid_writer.writerow([i*RESOLUTION_CM, j*RESOLUTION_CM, int(grid[i,j])])
 
 def main():
     # list of log names for the map
-    files = [ '2020_2_17__11_44_18.csv', '2020_2_17__11_50_3.csv', '2020_2_17__11_56_15.csv' ]#, '2020_2_17__12_1_10.csv', '2020_2_17__12_6_15.csv', '2020_2_17__12_10_16.csv', '2020_2_17__12_13_55.csv', '2020_2_17__12_18_20.csv', '2020_2_17__12_23_41.csv' ]
+    files = [ '2020_2_17__11_44_18.csv', '2020_2_17__11_50_3.csv', '2020_2_17__11_56_15.csv', '2020_2_17__12_1_10.csv', '2020_2_17__12_6_15.csv', '2020_2_17__12_10_16.csv', '2020_2_17__12_13_55.csv', '2020_2_17__12_18_20.csv', '2020_2_17__12_23_41.csv' ]
     # list of poses (x, y, z, roll, pitch, yaw) of each log in global frame
-    poses = [[-0.2032, -0.127, 1.2319, 0, 0, 0], [-3.8105, 9.9314, 1.2319, 0, 0, 0], [-11.4935, -1.7653, 1.2319, 0, 0, 0] ]#, [14.097, -1.77165, 1.2319, 0, 0, 0], [-3.8735, -13.2715, 1.2319, 0, 0, 0], [-11.176, -13.5255, 1.2319, 0, 0, 0], [10.7696, -13.5255, 1.2319, 0, 0, 0], [-11.176, 9.9314, 1.2319, 0, 0, 0], [10.7696, 9.9314, 1.2319, 0, 0, 0]]
+    poses = [[-0.2032, -0.127, 1.2319, 0, 0, 0], [-3.8105, 9.9314, 1.2319, 0, 0, 0], [-11.4935, -1.7653, 1.2319, 0, 0, 0], [14.097, -1.77165, 1.2319, 0, 0, 0], [-3.8735, -13.2715, 1.2319, 0, 0, 0], [-11.176, -13.5255, 1.2319, 0, 0, 0], [10.7696, -13.5255, 1.2319, 0, 0, 0], [-11.176, 9.9314, 1.2319, 0, 0, 0], [10.7696, 9.9314, 1.2319, 0, 0, 0]]
     for pose in poses:
         pose[0] += (432+114)/39.37
         pose[1] += (527.5+134.25)/39.37
@@ -145,6 +160,8 @@ def main():
             occ_grid_count[x_idx, y_idx] += 1
     obsGrid = occ_grid_count >= THRESHOLD
     plot_grid(occ_grid_count, obsGrid)
+
+    save_grid('rawObstacleGrid.csv', obsGrid)
 
     return 0
 

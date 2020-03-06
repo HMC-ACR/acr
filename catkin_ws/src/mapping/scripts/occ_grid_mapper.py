@@ -110,6 +110,35 @@ def load_data(filename):
 
     return data
 
+def read_csvGrid(filename, asGrid = False):
+    with open(filename, mode = 'r') as gridCSV:
+        file_reader = csv.reader(gridCSV, delimiter=',')
+        grid = []
+        if asGrid:
+            gridCSV.readline()
+            for row in file_reader:
+                row_data = []
+                for element in row:
+                    row_data.append(float(element))
+                grid.append(row_data)
+            grid = np.asarray(grid)
+            grid = grid[:,1:]
+        else:
+            gridCSV.readline()
+            for row in file_reader:
+                row_data = []
+                for element in row:
+                    row_data.append(float(element))
+                grid.append(row_data[-1])
+            for i in range(17): grid.append(0)
+            grid = np.asarray(grid)
+            #print(grid[298+293:298*2+1])
+            print(grid)
+            #grid = grid[:-579]
+            print(grid.shape)
+            grid = grid.reshape((282,298))
+        return grid
+
 def save_grid(filename, grid, asGrid = False):
     # save occupancy grid to a csv file    
     xMax, yMax = np.shape(grid)
@@ -166,4 +195,6 @@ def main():
     return 0
 
 if __name__ == "__main__":
-    main()
+    #main()
+    grid = read_csvGrid('rawObstacleGrid.csv', asGrid = False)
+    plot_grid(grid,grid)

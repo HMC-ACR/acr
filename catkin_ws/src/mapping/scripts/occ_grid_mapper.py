@@ -130,13 +130,8 @@ def read_csvGrid(filename, asGrid = False):
                 for element in row:
                     row_data.append(float(element))
                 grid.append(row_data[-1])
-            for i in range(17): grid.append(0)
             grid = np.asarray(grid)
-            #print(grid[298+293:298*2+1])
-            print(grid)
-            #grid = grid[:-579]
-            print(grid.shape)
-            grid = grid.reshape((282,298))
+            grid = grid.reshape((281,299))
         return grid
 
 def save_grid(filename, grid, asGrid = False):

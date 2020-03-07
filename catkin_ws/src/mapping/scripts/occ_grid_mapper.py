@@ -10,15 +10,18 @@ MAP_ZMIN = 0.3
 RESOLUTION_CM = 10
 THRESHOLD = 100
 
-def plot_grid(grid, obsGrid):
-    # display grid
+def plot_grid(obsGrid, grid = None):
+    # display obstacle grid
     eps = 1e-9
     plt.figure(1)
-    plt.imshow(np.log10(grid+eps), aspect = 'auto', origin = 'upper', cmap='jet')
-    plt.show()
-    plt.figure(2)
     plt.imshow(obsGrid, aspect = 'auto', origin = 'upper')
     plt.show()
+
+    # if gridcount is presented
+    if grid is not None:
+        plt.figure(2)
+        plt.imshow(np.log10(grid+eps), aspect = 'auto', origin = 'upper', cmap='jet')
+        plt.show()
 
 # borrowed conversion
 def euler_to_quaternion(yaw, pitch, roll):
@@ -183,7 +186,7 @@ def main():
 
             occ_grid_count[x_idx, y_idx] += 1
     obsGrid = occ_grid_count >= THRESHOLD
-    plot_grid(occ_grid_count, obsGrid)
+    plot_grid(obsGrid, occ_grid_count)
 
     save_grid('rawObstacleGrid.csv', obsGrid)
 
@@ -191,5 +194,5 @@ def main():
 
 if __name__ == "__main__":
     #main()
-    grid = read_csvGrid('rawObstacleGrid.csv', asGrid = False)
-    plot_grid(grid,grid)
+    grid = read_csvGrid('rawObstacleGrid_gridFormat.csv', asGrid = True)
+    plot_grid(grid)

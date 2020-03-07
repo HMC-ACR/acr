@@ -212,6 +212,13 @@ def main():
     grid[113:245,236] = 1.
 """
 
+""" Trimming on first cleaned grid
+    grid[210,98:135] = 1.
+    grid[116:164,101] = 1.
+    grid[112,201:237] = 1.
+    grid[116:134,102:105] = 0.
+"""
+
 if __name__ == "__main__":
     #main()
     grid = read_csvGrid('rawObstacleGrid_gridFormat.csv', asGrid = True)

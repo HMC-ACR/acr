@@ -192,7 +192,32 @@ def main():
 
     return 0
 
+""" Trimming on original THRESHOLD 100 ZMIN 0.3 m
+    grid[115:171,104:192] = 0.
+    grid[170:181,134:170] = 0.
+    grid[18:28,131:159] = 0.
+    grid[240:252,245:254] = 0.
+    grid[185:207,237:245] = 0.
+    grid[20:23,165:234] = 0.
+
+    # cloud
+    grid[85:110,65:103] = 0.
+    #grid[68:101,106:132] = 0.
+    #grid[68:98,160:195] = 0.
+    grid[111:240,235:284] = 0.
+
+    grid[23,64:136] = 1.
+    grid[23:56,136] = 1.
+    grid[23,165:234] = 1.
+    grid[113:245,236] = 1.
+"""
+
 if __name__ == "__main__":
     #main()
     grid = read_csvGrid('rawObstacleGrid_gridFormat.csv', asGrid = True)
     plot_grid(grid)
+
+    """ Saving grid files in both formats
+    save_grid('rawObstacleGrid_gridFormat.csv', grid, asGrid=True)
+    save_grid('rawObstacleGrid.csv', grid, asGrid=False)
+    """

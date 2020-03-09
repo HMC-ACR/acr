@@ -13,22 +13,23 @@ import adafruit_bno055
 from geometry_msgs.msg import Twist, Pose, PoseStamped
 from nav_msgs.msg import Odometry, Path
 from sensor_msgs.msg import PointCloud2
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
 class ParticleFilter:
+    X_NOISE_STDDEV = 0.1
+    Y_NOISE_STDDEV = 0.1
+    THETA_NOISE_STDDEV = 0.02
 
     def __init__(self):
+        # Seed random number generators
         np.random.seed()
         random.seed(datetime.now())
 
-
+        # Setup particles
         self.particles = []
         self.numParticles = 700
         self.percent_randomize = 0.01
-        self.num_randomize = self.numParticles*self.percent_randomize
-
-        # i2c device must be on Jetson's i2c bus 1
-        i2c = busio.I2C(board.SCL, board.SDA)
-        self.sensor = adafruit_bno055.BNO055(i2c)
+        self.num_randomize = int(self.numParticles*self.percent_randomize)
 
         # Initial state estimate
         self.x0 = 0 
@@ -37,26 +38,32 @@ class ParticleFilter:
         self.y_dot0 = 0 
         self.theta0 = 0
 
+        self.init_particles()
+
+        # i2c device must be on Jetson's i2c bus 1
+        i2c = busio.I2C(board.SCL, board.SDA)
+        self.sensor = adafruit_bno055.BNO055(i2c)
+
+        # PDF of measurement and particle state error
         mean = [0.0, 0.0, 0.0]
-        cov = [[0.2, 0.0, 0.0], [0.0, 0.2, 0.0], [0.0, 0.0, 0.09]]
+        cov = [[0.5, 0.0, 0.0], [0.0, 0.5, 0.0], [0.0, 0.0, 0.09]]
         self.rv = ss.multivariate_normal(mean, cov)
 
+        # Map dimensions
         self.map_minX = 0.0
         self.map_maxX = 28.1  # meters
         self.map_minY = 0.0
         self.map_maxY = 29.9  # meters
-    
-        self.init_particles()
 
+        # ROS Setup
         rospy.init_node('pfLocalization', anonymous=True)
         self.odom_pub = rospy.Publisher('/odom', Odometry, queue_size=10)
-
-        self.ouster_sub = rospy.Subscriber('/os1_node/points', PointCloud2, self.lidar_callback)
+        self.ouster_sub = rospy.Subscriber('/os1_cloud_node/points', PointCloud2, self.lidar_callback)
         self.last_imu_callback_timestamp = 0
         self.rate = rospy.Rate(10)    #10 Hz
 
         while not rospy.is_shutdown():
-            self.state_est_pub() #publish /cmd_vel at 10 Hz
+            self.state_est_pub()  # publish /odom at 10 Hz
             self.rate.sleep()
 
 
@@ -78,9 +85,9 @@ class ParticleFilter:
         weight = 1/self.numParticles
         for i in range(0, self.numParticles):
             # Add noise to be more robust to poor placement
-            x0 = self.x0 + np.random.normal(0.0, 0.1)
-            y0 = self.y0 + np.random.normal(0.0, 0.1)
-            theta0 = self.theta0 + np.random.normal(0.0, 0.02)
+            x0 = self.x0 + np.random.normal(0.0, X_NOISE_STDDEV)
+            y0 = self.y0 + np.random.normal(0.0, Y_NOISE_STDDEV)
+            theta0 = self.theta0 + np.random.normal(0.0, THETA_NOISE_STDDEV)
             self.particles.insert(i, self.Particle(x0, y0, self.x_dot0, self.y_dot0, theta0, weight))
             
 
@@ -93,8 +100,9 @@ class ParticleFilter:
         particle.y = rand_y
         particle.theta = rand_theta
 
+
     def get_imu_data(self):
-        x_accel = self.sensor.linear_acceleartion[0]
+        x_accel = self.sensor.linear_acceleration[0]
         z_rot_vel = self.sensor.gyro[2]
 
         return x_accel, z_rot_vel
@@ -120,9 +128,9 @@ class ParticleFilter:
 
             delta_x_dot = math.cos(theta)*x_accel*DT
             delta_y_dot = math.sin(theta)*x_accel*DT
-            delta_x = x_dot*DT + (0.5)*math.cos(theta)*x_accel*DT*DT
-            delta_y = y_dot*DT + (0.5)*math.sin(theta)*x_accel*DT*DT
-            delta_theta = -z_rot_vel*DT
+            delta_x = x_dot*DT + (0.5)*math.cos(theta)*x_accel*DT*DT + np.random.normal(0.0, X_NOISE_STDDEV)
+            delta_y = y_dot*DT + (0.5)*math.sin(theta)*x_accel*DT*DT + np.random.normal(0.0, Y_NOISE_STDDEV)
+            delta_theta = -z_rot_vel*DT + np.random.normal(0.0, THETA_NOISE_STDDEV)
 
             x_dot += delta_x_dot
             y_dot += delta_y_dot
@@ -211,8 +219,18 @@ class ParticleFilter:
         y_dotavg = y_num/self.particle_weight_sum
         thetaavg = self.angleDiff(math.atan2(theta_y, theta_x))
 
-        # TODO(apham): pack state into odom msg
-        
+        # Pack state estimate into odom msg to publish
+        odom_msg = Odometry()
+        odom_mgs.pose.pose.position.x = xavg
+        odom.pose.pose.position.y = yavg 
+
+        # Pack angle into quaternion
+        q = quaternion_from_euler(0.0, 0.0, thetaavg, axix='xyzs')
+        odom_msg.pose.pose.orientation.x = q[0]
+        odom_msg.pose.pose.orientation.y = q[1]
+        odom_msg.pose.pose.orientation.z = q[2]
+        odom_msg.pose.pose.orientation.w = q[3]
+
         return odom_msg
 
 

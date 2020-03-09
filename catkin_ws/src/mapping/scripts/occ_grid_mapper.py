@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import csv
+import open3d as o3d
 
 MAP_XMAX = (92*12+4)/39.37 # meters
 MAP_YMAX = (98*12+3)/39.37 # meters
@@ -192,6 +193,20 @@ def main():
 
     return 0
 
+def convert2pcd(grid_filename, pcd_filename, asGrid = False):
+    grid = read_csvGrid(grid_filename, asGrid = asGrid)
+    xyz = np.zeros((np.sum(grid), 3))
+    index = 0
+    for i in range(grid.shape(0)):
+        for j in range(grid.shape(1)):
+            if grid[i,j] == 1:
+                xyz[index,:] = [.1*i, .1*j, 0]
+
+    # Pass xyz to Open3D.o3d.geometry.PointCloud and visualize
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(xyz)
+    o3d.io.write_point_cloud(pcd_filename, pcd)
+
 """ Trimming on original THRESHOLD 100 ZMIN 0.3 m
     grid[115:171,104:192] = 0.
     grid[170:181,134:170] = 0.
@@ -221,8 +236,13 @@ def main():
 
 if __name__ == "__main__":
     #main()
-    grid = read_csvGrid('rawObstacleGrid_gridFormat.csv', asGrid = True)
-    plot_grid(grid)
+
+    #grid = read_csvGrid('rawObstacleGrid_gridFormat.csv', asGrid = True)
+    #plot_grid(grid)
+
+    grid_filename = 'rawObstacleGrid.csv'
+    pcd_filename = 'grid.pcd'
+    convert2pcd(grid_filename, pcd_filename, asGrid = False)
 
     """ Saving grid files in both formats
     save_grid('rawObstacleGrid_gridFormat.csv', grid, asGrid=True)

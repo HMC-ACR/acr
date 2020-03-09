@@ -142,19 +142,22 @@ def main():
     local_xy = .1*local_xy.reshape((2,100))
     
     del_theta_list = np.pi/180*np.linspace(-30, 30, num = 20)
+    del_xy_list = np.linspace(-.5, .5, num = 10).repeat(2,axis=0)
     for iteration in range(30):
-
         # Computing current fitness ----------------------------------------------------------
         fitness = computeFitness(T, local_xy, localGrid, globalGrid)
         
         # Adjusting ---------------------------------------------------------------------------
         temp_theta = theta
+        temp_xy = xy
         for del_theta in del_theta_list:
-            Tp = tranformationMatrix( del_theta + theta, xy)
-            temp_fit = computeFitness(Tp, local_xy, localGrid, globalGrid)
-            if temp_fit > fitness:
-                fitness = temp_fit
-                temp_theta = del_theta + theta
+            for del_xy in del_xy_list:
+                Tp = tranformationMatrix(theta + del_theta, xy + del_xy)
+                temp_fit = computeFitness(Tp, local_xy, localGrid, globalGrid)
+                if temp_fit > fitness:
+                    fitness = temp_fit
+                    temp_xy = xy + del_xy
+                    temp_theta = theta + del_theta
 
         theta = temp_theta
 

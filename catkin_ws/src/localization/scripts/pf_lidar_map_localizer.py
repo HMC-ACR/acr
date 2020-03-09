@@ -15,8 +15,6 @@ from nav_msgs.msg import Odometry, Path
 from sensor_msgs.msg import PointCloud2
 
 class ParticleFilter:
-    DT = 0.1
-
 
     def __init__(self):
         np.random.seed()
@@ -54,7 +52,7 @@ class ParticleFilter:
         self.odom_pub = rospy.Publisher('/odom', Odometry, queue_size=10)
 
         self.ouster_sub = rospy.Subscriber('/os1_node/points', PointCloud2, self.lidar_callback)
-
+        self.last_imu_callback_timestamp = 0
         self.rate = rospy.Rate(10)    #10 Hz
 
         while not rospy.is_shutdown():
@@ -104,8 +102,15 @@ class ParticleFilter:
 
     def propagate(self):
         ''' Propogate particles based on cmd_vel/acceleramator'''
+        # Timestamping
+        imu_callback_timestamp = rospy.get_time() # time in seconds
+        if abs(imu_callback_timestamp-self.last_imu_callback_timestamp)<.3:
+            DT = imu_callback_timestamp - self.last_imu_callback_timestamp
+            self.last_imu_callback_timestamp = imu_callback_timestamp
+        else:
+            DT = .1 # if not updating at least every .3 s, assume DT=.1s
+        
         x_accel, z_rot_vel = self.get_imu_data()
-
         for p in self.particles:
             x_dot = p.x_dot
             y_dot = p.y_dot
@@ -115,9 +120,9 @@ class ParticleFilter:
 
             delta_x_dot = math.cos(theta)*x_accel*DT
             delta_y_dot = math.sin(theta)*x_accel*DT
-            deleta_x = x_dot*DT + (0.5)*math.cos(theta)*x_accel*DT*DT
-            deleta_y = y_dot*DT + (0.5)*math.sin(theta)*x_accel*DT*DT
-            delta_theta = z_rot_vel*DT
+            delta_x = x_dot*DT + (0.5)*math.cos(theta)*x_accel*DT*DT
+            delta_y = y_dot*DT + (0.5)*math.sin(theta)*x_accel*DT*DT
+            delta_theta = -z_rot_vel*DT
 
             x_dot += delta_x_dot
             y_dot += delta_y_dot

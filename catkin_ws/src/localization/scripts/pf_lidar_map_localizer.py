@@ -50,6 +50,8 @@ class ParticleFilter:
         self.rv = ss.multivariate_normal(mean, cov)
 
         # Map dimensions
+        filename = "map.pcd"
+        self.map = self.load_map(filename)
         self.map_minX = 0.0
         self.map_maxX = 28.1  # meters
         self.map_minY = 0.0
@@ -187,9 +189,28 @@ class ParticleFilter:
             random_particle = int(random.uniform(0, self.numParticles-1))
             self.SetRandomStartPos(random_particle)
 
+    def load_map(self, filename):
+        # TODO(apham): load in the map to compare our lidar scans to 
+        pass
+
 
     def run_icp(self, point_cloud):
         # TODO(apham): implement ICP to return a translation/rotation/pose estimate of the robot
+
+        point_cloud_2d = self.prefilter_point_cloud(point_cloud)
+
+        # Convert point cloud msg to pcd
+
+        # Run ICP with converted pcd and map pcd
+
+        # Convert rotation matrix and translation to measurement state estimate
+
+        pass
+
+    def prefilter_point_cloud(self, point_cloud):
+        # TODO(apham): filtering of point cloud (only look at certain distance
+        # and heights and clamp to 2D)
+
         pass
 
 

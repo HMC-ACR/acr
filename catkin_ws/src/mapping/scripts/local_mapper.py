@@ -148,8 +148,6 @@ def main():
         fitness = computeFitness(T, local_xy, localGrid, globalGrid)
         
         # Adjusting ---------------------------------------------------------------------------
-        temp_theta = theta
-        temp_xy = xy
         for del_theta in del_theta_list:
             for del_xy in del_xy_list:
                 Tp = tranformationMatrix(theta + del_theta, xy + del_xy)
@@ -160,6 +158,7 @@ def main():
                     temp_theta = theta + del_theta
 
         theta = temp_theta
+        xy = temp_xy
 
 if __name__ == "__main__":
     main()
